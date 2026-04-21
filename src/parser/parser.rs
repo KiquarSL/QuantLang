@@ -97,6 +97,12 @@ impl Parser {
                 let expr = NumExpr::new(n);
                 Box::new(expr)
             }
+            TT::LParent => {
+                self.match_type(TT::LParent);
+                let result = self.expression();
+                self.match_type(TT::RParent);
+                result
+            }
             _ => panic!("Unknown expression in {}:{}", token.line, token.column),
         }
     }
