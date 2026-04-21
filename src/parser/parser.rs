@@ -11,8 +11,7 @@ struct Parser {
 }
 
 impl Parser {
-    fn new(tokens: Vec<Token>) -> Self {
-        let exprs = Vec::<ExprT>::new();
+    fn new(tokens: Vec<Token>, exprs: Vec<ExprT>) -> Self {
         let tokens = tokens.clone();
         Self {
             pos: 0,
@@ -104,12 +103,11 @@ impl Parser {
 }
 
 pub fn parse(tokens: Vec<Token>) -> Vec<ExprT> {
-    let mut pr = Parser::new(tokens);
-    let mut exprs = Vec::new();
-
+    let exprs = Vec::new();
+    let mut pr = Parser::new(tokens, exprs);
     while !pr.match_type(TT::Eof) {
         let expr = pr.expression();
-        exprs.push(expr);
+        pr.exprs.push(expr);
     }
-    exprs
+    pr.exprs
 }
