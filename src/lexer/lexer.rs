@@ -82,6 +82,8 @@ pub fn tokenize(source: String) -> Vec<Token> {
                 '-' => lx.push(Token::minus(lx.line, lx.column)),
                 '*' => lx.push(Token::star(lx.line, lx.column)),
                 '/' => lx.push(Token::slash(lx.line, lx.column)),
+                '(' => lx.push(Token::lbracket(lx.line, lx.column)),
+                ')' => lx.push(Token::rbracket(lx.line, lx.column)),
                 _ if current.is_digit(10) => {
                     let token = lx.tokenize_number(lx.line, lx.column);
                     lx.push(token);

@@ -6,6 +6,10 @@ pub enum TokenType {
     Minus, // -
     Slash, // /
     Star,  // *
+
+    LBracket,
+    RBracket,
+
     Number(f64),
     Eof,
 }
@@ -42,6 +46,12 @@ impl Token {
     pub fn eof() -> Self {
         Token::new(TokenType::Eof, 0, 0)
     }
+    pub fn lbracket(line: usize, column: usize) -> Self {
+        Token::new(TokenType::LBracket, line, column)
+    }
+    pub fn rbracket(line: usize, column: usize) -> Self {
+        Token::new(TokenType::RBracket, line, column)
+    }
 }
 
 impl fmt::Display for Token {
@@ -52,6 +62,8 @@ impl fmt::Display for Token {
             TokenType::Plus => write!(f, "{} {}", "+", pos),
             TokenType::Star => write!(f, "{} {}", "*", pos),
             TokenType::Slash => write!(f, "{} {}", "/", pos),
+            TokenType::LBracket => write!(f, "{} {}", "(", pos),
+            TokenType::RBracket => write!(f, "{} {}", ")", pos),
             TokenType::Number(num) => write!(f, "{} {}", num, pos),
             TokenType::Eof => write!(f, "{}", "EOF"),
         }
