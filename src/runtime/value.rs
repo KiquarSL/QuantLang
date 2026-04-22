@@ -19,4 +19,11 @@ impl Value {
             Value::Null => "null".to_string(),
         }
     }
+
+    pub fn is_truth(&self) -> bool {
+        match self {
+            Value::Bool(v) => *v,
+            _ => false,
+        }
+    }
 }

@@ -8,12 +8,24 @@ pub enum TokenType {
     Star,      // *
     LParent,   // (
     RParent,   // )
+    LBracket,  // {
+    RBracket,  // }
     Assign,    // =
     Semicolon, // ;
+    Not,       // !
+    Eq,        // ==
+    Ne,        // !=
+    Lt,        // <
+    Gt,        // >
+    Le,        // <=
+    Ge,        // >=
+    True,
+    False,
     Keyword(String),
     Type(String),
     Id(String),
     Number(f64),
+    String(String),
     Eof,
 }
 
@@ -28,6 +40,7 @@ impl Token {
     pub fn new(kind: TokenType, line: usize, column: usize) -> Self {
         Self { kind, line, column }
     }
+
     pub fn plus(line: usize, column: usize) -> Self {
         Token::new(TokenType::Plus, line, column)
     }
@@ -52,11 +65,58 @@ impl Token {
         Token::new(TokenType::RParent, line, column)
     }
 
+    pub fn lbracket(line: usize, column: usize) -> Self {
+        Token::new(TokenType::LBracket, line, column)
+    }
+
+    pub fn rbracket(line: usize, column: usize) -> Self {
+        Token::new(TokenType::RBracket, line, column)
+    }
+
     pub fn assign(line: usize, column: usize) -> Self {
         Token::new(TokenType::Assign, line, column)
     }
 
-    // Токены с данными
+    pub fn semicolon(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Semicolon, line, column)
+    }
+
+    pub fn eq(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Eq, line, column)
+    }
+
+    pub fn ne(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Ne, line, column)
+    }
+
+    pub fn lt(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Lt, line, column)
+    }
+
+    pub fn gt(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Gt, line, column)
+    }
+
+    pub fn le(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Le, line, column)
+    }
+
+    pub fn ge(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Ge, line, column)
+    }
+
+    pub fn not(line: usize, column: usize) -> Self {
+        Token::new(TokenType::Not, line, column)
+    }
+
+    pub fn btrue(line: usize, column: usize) -> Self {
+        Token::new(TokenType::True, line, column)
+    }
+
+    pub fn bfalse(line: usize, column: usize) -> Self {
+        Token::new(TokenType::False, line, column)
+    }
+
     pub fn keyword(name: String, line: usize, column: usize) -> Self {
         Token::new(TokenType::Keyword(name), line, column)
     }
@@ -73,8 +133,8 @@ impl Token {
         Token::new(TokenType::Number(num), line, column)
     }
 
-    pub fn semicolon(line: usize, column: usize) -> Self {
-        Token::new(TokenType::Semicolon, line, column)
+    pub fn string(string: String, line: usize, column: usize) -> Self {
+        Token::new(TokenType::String(string), line, column)
     }
 
     pub fn eof() -> Self {
@@ -92,10 +152,22 @@ impl fmt::Display for Token {
             TokenType::Slash => write!(f, "/ {}", pos),
             TokenType::LParent => write!(f, "( {}", pos),
             TokenType::RParent => write!(f, ") {}", pos),
+            TokenType::LBracket => write!(f, "{{ {}", pos),
+            TokenType::RBracket => write!(f, "}} {}", pos),
             TokenType::Assign => write!(f, "= {}", pos),
             TokenType::Semicolon => write!(f, "; {}", pos),
+            TokenType::Eq => write!(f, "== {}", pos),
+            TokenType::Ne => write!(f, "!= {}", pos),
+            TokenType::Lt => write!(f, "< {}", pos),
+            TokenType::Gt => write!(f, "> {}", pos),
+            TokenType::Not => write!(f, "! {}", pos),
+            TokenType::Le => write!(f, "<= {}", pos),
+            TokenType::Ge => write!(f, ">= {}", pos),
+            TokenType::True => write!(f, "true {}", pos),
+            TokenType::False => write!(f, "false {}", pos),
             TokenType::Type(name) => write!(f, "type:{} {}", name, pos),
             TokenType::Id(name) => write!(f, "id:{} {}", name, pos),
+            TokenType::String(string) => write!(f, "String:{} {}", string, pos),
             TokenType::Keyword(name) => write!(f, "kw:{} {}", name, pos),
             TokenType::Number(num) => write!(f, "{} {}", num, pos),
             TokenType::Eof => write!(f, "EOF"),

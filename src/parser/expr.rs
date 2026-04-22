@@ -34,25 +34,43 @@ impl Expr {
             Expr::Bin(left, op, right) => {
                 let l = left.eval(rt);
                 let r = right.eval(rt);
-                match (l, r) {
-                    (Value::F64(a), Value::F64(b)) => Value::F64(match op {
-                        Op::Add => a + b,
-                        Op::Sub => a - b,
-                        Op::Mul => a * b,
-                        Op::Div => a / b,
-                    }),
-                    (Value::String(a), Value::String(b)) => Value::String(match op {
-                        Op::Add => a + &b,
-                        _ => panic!("String only supports + operator"),
-                    }),
-                    _ => panic!("Type mismatch in binary operation"),
+                match (l.clone(), r.clone()) {
+                    (Value::F64(a), Value::F64(b)) => match op {
+                        Op::Add => Value::F64(a + b),
+                        Op::Sub => Value::F64(a - b),
+                        Op::Mul => Value::F64(a * b),
+                        Op::Div => Value::F64(a / b),
+                        Op::Eq => Value::Bool(a == b),
+                        Op::Ne => Value::Bool(a != b),
+                        Op::Lt => Value::Bool(a < b),
+                        Op::Gt => Value::Bool(a > b),
+                        Op::Le => Value::Bool(a <= b),
+                        Op::Ge => Value::Bool(a >= b),
+                    },
+
+                    (Value::String(a), Value::String(b)) => match op {
+                        Op::Add => Value::String(a + &b),
+                        Op::Eq => Value::Bool(a == b),
+                        Op::Ne => Value::Bool(a != b),
+                        _ => panic!("String only supports +, ==, !="),
+                    },
+
+                    (Value::Bool(a), Value::Bool(b)) => match op {
+                        Op::Eq => Value::Bool(a == b),
+                        Op::Ne => Value::Bool(a != b),
+                        _ => panic!("Bool only supports ==, !="),
+                    },
+                    _ => panic!(
+                        "Type mismatch in binary operation: {:?} vs {:?}",
+                        l.clone(),
+                        r.clone()
+                    ),
                 }
             }
         }
     }
 }
 
-// Конструкторы
 impl Expr {
     pub fn number(n: f64) -> Self {
         Expr::Number(n)
@@ -102,6 +120,12 @@ impl fmt::Display for Op {
             Op::Sub => write!(f, "-"),
             Op::Mul => write!(f, "*"),
             Op::Div => write!(f, "/"),
+            Op::Eq => write!(f, "=="),
+            Op::Ne => write!(f, "!="),
+            Op::Lt => write!(f, "<"),
+            Op::Gt => write!(f, ">"),
+            Op::Le => write!(f, "<="),
+            Op::Ge => write!(f, ">="),
         }
     }
 }
@@ -112,6 +136,12 @@ pub enum Op {
     Sub,
     Mul,
     Div,
+    Eq, // ==
+    Ne, // !=
+    Lt, // <
+    Gt, // >
+    Le, // <=
+    Ge, // >=
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

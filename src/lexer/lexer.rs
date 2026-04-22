@@ -75,6 +75,17 @@ impl Lexer {
         Token::number(buffer.parse().unwrap(), line, column)
     }
 
+    fn tokenize_str(&mut self, line: usize, column: usize) -> Token {
+        let open = self.peek(0);
+        self.next();
+        let mut buffer = String::new();
+        while self.peek(0) != open {
+            buffer.push(self.peek(0).unwrap());
+            self.next();
+        }
+        Token::string(buffer, line, column)
+    }
+
     fn tokenize_word(&mut self, line: usize, column: usize) -> Token {
         let mut buffer = String::new();
         loop {
@@ -89,7 +100,11 @@ impl Lexer {
                 break;
             }
         }
-        if DATA_TYPES.contains(&buffer.as_str()) {
+        if buffer == "true" {
+            Token::btrue(line, column)
+        } else if buffer == "false" {
+            Token::bfalse(line, column)
+        } else if DATA_TYPES.contains(&buffer.as_str()) {
             Token::data_type(buffer.parse().unwrap(), line, column)
         } else if KEYWORDS.contains(&buffer.as_str()) {
             Token::keyword(buffer.parse().unwrap(), line, column)
@@ -112,7 +127,34 @@ pub fn tokenize(source: String) -> Vec<Token> {
                     lx.next();
                     continue;
                 }
-                '=' => lx.push(Token::assign(lx.line, lx.column)),
+                '=' => {
+                    if lx.peek(1) == Some('=') {
+                        lx.push(Token::eq(lx.line, lx.column));
+                        lx.next();
+                    }
+                    lx.push(Token::assign(lx.line, lx.column));
+                }
+                '<' => {
+                    if lx.peek(1) == Some('=') {
+                        lx.push(Token::le(lx.line, lx.column));
+                        lx.next();
+                    }
+                    lx.push(Token::lt(lx.line, lx.column));
+                }
+                '>' => {
+                    if lx.peek(1) == Some('=') {
+                        lx.push(Token::ge(lx.line, lx.column));
+                        lx.next();
+                    }
+                    lx.push(Token::gt(lx.line, lx.column));
+                }
+                '!' => {
+                    if lx.peek(1) == Some('=') {
+                        lx.push(Token::ne(lx.line, lx.column));
+                        lx.next();
+                    }
+                    lx.push(Token::not(lx.line, lx.column));
+                }
                 '+' => lx.push(Token::plus(lx.line, lx.column)),
                 '-' => lx.push(Token::minus(lx.line, lx.column)),
                 '*' => lx.push(Token::star(lx.line, lx.column)),
@@ -120,6 +162,13 @@ pub fn tokenize(source: String) -> Vec<Token> {
                 '/' => lx.push(Token::slash(lx.line, lx.column)),
                 '(' => lx.push(Token::lparent(lx.line, lx.column)),
                 ')' => lx.push(Token::rparent(lx.line, lx.column)),
+                '{' => lx.push(Token::lbracket(lx.line, lx.column)),
+                '}' => lx.push(Token::rbracket(lx.line, lx.column)),
+                '\'' | '"' => {
+                    let token = lx.tokenize_str(lx.line, lx.column);
+                    lx.push(token);
+                    continue;
+                }
                 _ if current.is_digit(10) => {
                     let token = lx.tokenize_number(lx.line, lx.column);
                     lx.push(token);
