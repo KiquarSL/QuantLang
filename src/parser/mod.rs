@@ -1,7 +1,7 @@
+pub mod ast;
 pub mod expr;
 pub mod parser;
 
-#[allow(unused_imports)]
-pub use expr::{BinExpr, Expr, NumExpr, Op, Unary, UnaryExpr};
-#[allow(unused_imports)]
-pub use parser::parse;
+pub use ast::{NewVarStmt, Stmt, is_assign_stmt, parse_assign_stmt};
+pub use expr::{Expr, Op, Unary};
+pub use parser::{Parser, parse};

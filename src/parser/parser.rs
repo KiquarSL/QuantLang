@@ -1,26 +1,27 @@
 use crate::lexer::{Token, TokenType};
-use crate::parser::{BinExpr, Expr, NumExpr, Op, Unary, UnaryExpr};
+use crate::parser::{Expr, Op, Unary};
+use crate::parser::{Stmt, is_assign_stmt, parse_assign_stmt};
 
-type ExprT = Box<dyn Expr>;
 type TT = TokenType;
+type StmtT = Box<dyn Stmt>;
 
-struct Parser {
+pub struct Parser {
     pos: usize,
     tokens: Vec<Token>,
-    exprs: Vec<ExprT>,
+    stmts: Vec<StmtT>,
 }
 
 impl Parser {
-    fn new(tokens: Vec<Token>, exprs: Vec<ExprT>) -> Self {
+    fn new(tokens: Vec<Token>, stmts: Vec<StmtT>) -> Self {
         let tokens = tokens.clone();
         Self {
             pos: 0,
             tokens,
-            exprs,
+            stmts,
         }
     }
 
-    fn get(&self, offset: i8) -> Token {
+    pub fn get(&self, offset: i8) -> Token {
         let index = self.pos + offset as usize;
         if index < self.tokens.len() {
             self.tokens[index].clone()
@@ -29,11 +30,11 @@ impl Parser {
         }
     }
 
-    fn next(&mut self) {
+    pub fn next(&mut self) {
         self.pos += 1;
     }
 
-    fn match_type(&mut self, kind: TokenType) -> bool {
+    pub fn match_type(&mut self, kind: TokenType) -> bool {
         let current = self.get(0);
         if kind == current.kind {
             self.next();
@@ -43,34 +44,46 @@ impl Parser {
         }
     }
 
-    fn expression(&mut self) -> ExprT {
+    pub fn parse_stmt(&mut self) {
+        while !self.match_type(TT::Eof) {
+            if is_assign_stmt(self) {
+                let stmt: StmtT = parse_assign_stmt(self);
+                self.stmts.push(stmt);
+            } else {
+                let token = self.get(0);
+                panic!("Unknown statement in {}:{}", token.line, token.column);
+            }
+        }
+    }
+
+    pub fn expression(&mut self) -> Expr {
         return self.additive();
     }
 
-    fn additive(&mut self) -> ExprT {
+    fn additive(&mut self) -> Expr {
         let expr = self.multiplicative();
         loop {
             if self.match_type(TT::Plus) {
                 let right = self.multiplicative();
-                return Box::new(BinExpr::new(expr, Op::Add, right));
+                return Expr::bin(expr, Op::Add, right);
             } else if self.match_type(TT::Minus) {
                 let right = self.multiplicative();
-                return Box::new(BinExpr::new(expr, Op::Sub, right));
+                return Expr::bin(expr, Op::Sub, right);
             }
             break;
         }
         expr
     }
 
-    fn multiplicative(&mut self) -> ExprT {
+    fn multiplicative(&mut self) -> Expr {
         let expr = self.unary();
         loop {
             if self.match_type(TT::Star) {
                 let right = self.unary();
-                return Box::new(BinExpr::new(expr, Op::Mul, right));
+                return Expr::bin(expr, Op::Mul, right);
             } else if self.match_type(TT::Slash) {
                 let right = self.unary();
-                return Box::new(BinExpr::new(expr, Op::Div, right));
+                return Expr::bin(expr, Op::Div, right);
             } else {
                 break;
             }
@@ -78,24 +91,24 @@ impl Parser {
         expr
     }
 
-    fn unary(&mut self) -> ExprT {
+    fn unary(&mut self) -> Expr {
         let token = self.get(0);
         match token.kind {
             TT::Minus => {
                 self.next();
-                Box::new(UnaryExpr::new(self.primary(), Unary::Negative))
+                Expr::unary(self.primary(), Unary::Negative)
             }
             _ => self.primary(),
         }
     }
 
-    fn primary(&mut self) -> ExprT {
+    fn primary(&mut self) -> Expr {
         let token = self.get(0);
         match token.kind {
             TT::Number(n) => {
                 self.next();
-                let expr = NumExpr::new(n);
-                Box::new(expr)
+                let expr = Expr::number(n);
+                expr
             }
             TT::LParent => {
                 self.match_type(TT::LParent);
@@ -108,12 +121,9 @@ impl Parser {
     }
 }
 
-pub fn parse(tokens: Vec<Token>) -> Vec<ExprT> {
-    let exprs = Vec::new();
-    let mut pr = Parser::new(tokens, exprs);
-    while !pr.match_type(TT::Eof) {
-        let expr = pr.expression();
-        pr.exprs.push(expr);
-    }
-    pr.exprs
+pub fn parse(tokens: Vec<Token>) -> Vec<StmtT> {
+    let stmts = Vec::new();
+    let mut pr = Parser::new(tokens, stmts);
+    pr.parse_stmt();
+    pr.stmts
 }
